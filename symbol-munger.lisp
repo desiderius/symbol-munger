@@ -49,6 +49,17 @@
 (defmacro ensure-flat-list! (place)
   `(setf ,place (alexandria:flatten ,place)))
 
+(defmacro %intern (name &optional (package :keyword))
+  `(intern (
+	    #+allegro
+	    ,(ecase excl:*current-case-mode*
+	       (:case-sensitive-lower 'string-downcase)
+	       (:case-insensitive-upper 'string-upcase))
+	    #-allegro
+	    ,'string-upcase
+	    ,name)
+	   ,package))
+
 (defun qualified-symbol-string (sym)
   (let ((*package* (find-package :keyword))
         (*print-pretty* nil))
@@ -76,7 +87,7 @@
 
    returns a string (new or the one passed in if in-place) unless :stream is provided"
   ;; Check and enforce our assumptions
-  (ecase capitalize ((:each-word :first-word :but-first-word T :all nil) T))
+  (ecase capitalize ((:each-word :first-word :but-first-word t :all nil) t))
   (when (and in-place (member :capitals word-separators-to-replace))
     (error "in-place replacement is not available for word separators which take no space (such as :capitals)"))
   (ensure-flat-list! word-separators)
@@ -131,7 +142,7 @@
 
           (for should-cap? =
                (or (eq capitalize :all)
-                   (eq capitalize T)
+                   (eq capitalize t)
                    (and start-of-word?
                         (or (eq capitalize :each-word)
                             (if (first-iteration-p)
@@ -142,7 +153,7 @@
                         ((member c word-separators-to-replace :test #'string-equal)
                          (or replacement-sep (next-iteration)))
                         (should-cap? (char-upcase c))
-                        (T (char-downcase c))))
+                        (t (char-downcase c))))
 
           (when in-place (setf (elt source-string i) char))
           (when str (write-c char)))))
@@ -159,7 +170,7 @@
 
 (defun english->lisp-symbol (phrase &optional (package *package*))
   "Turns an english phrase into a common lisp symbol in the specified package"
-  (intern (english->lisp-name phrase :capitalize T) package))
+  (%intern (english->lisp-name phrase :capitalize t) package))
 
 (defun english->keyword (phrase)
   "Turns an english phrase into a common lisp keyword"
@@ -207,10 +218,10 @@
 (defun combine-symbols (phrase &key (package *package*) (separator #\-))
   ;; never reintern nil
   (when phrase
-    (intern
+    (%intern
      (normalize-capitalization-and-spacing
       phrase
-      :capitalize T
+      :capitalize t
       ;; these are flattened so if nil it will just use #\-
       :word-separators separator
       :word-separators-to-replace nil)
@@ -254,7 +265,7 @@
    :word-separators-to-replace (list :capitals #\_)))
 
 (defun camel-case->lisp-symbol (phrase &optional (package *package*))
-  (intern (camel-case->lisp-name phrase :capitalize T) package))
+  (%intern (camel-case->lisp-name phrase :capitalize t) package))
 
 (defun camel-case->keyword (phrase)
   (camel-case->lisp-symbol phrase :keyword))
@@ -286,7 +297,7 @@
 
 (defun underscores->lisp-symbol (phrase &optional (package *package*))
   "Turns a_phrase_with_underscores into a-phrase-with-underscores lisp symbol"
-  (intern (underscores->lisp-name phrase :capitalize T) package))
+  (%intern (underscores->lisp-name phrase :capitalize t) package))
 
 (defun underscores->keyword (phrase)
   "Converts and underscores name to a common lisp keyword"

@@ -31,7 +31,7 @@
     (assert-equal :this-is-a-test (camel-case->keyword "thisIsATest"))
     (assert-equal "this_is_a_test" (camel-case->underscores "thisIsATest"))
     (assert-equal "this_is_a_test" (camel-case->underscores "ThisIsATest"))
-    (assert-equal "THIS_IS_A_TEST" (camel-case->underscores "ThisIsATest" :capitalize T))
+    (assert-equal "THIS_IS_A_TEST" (camel-case->underscores "ThisIsATest" :capitalize t))
     (assert-equal "This_Is_A_Test" (camel-case->underscores "ThisIsATest" :capitalize :each-word))
 
     (assert-equal "This Is A Test" (underscores->english "this_is_a_test"))
